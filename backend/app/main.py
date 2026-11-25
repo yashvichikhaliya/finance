@@ -1,0 +1,19 @@
+import os
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.database import Base, engine
+from app.routers import auth, transactions, budgets, dashboard
+
+Base.metadata.create_all(bind=engine)
+app = FastAPI(title="FinanceFlow API", description="Personal finance and expense management API", version="1.0.0")
+origins = [x.strip() for x in os.getenv("FRONTEND_ORIGINS", "http://localhost:8501").split(",") if x.strip()]
+app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.include_router(auth.router)
+app.include_router(transactions.router)
+app.include_router(budgets.router)
+app.include_router(dashboard.router)
+
+@app.get("/")
+def root(): return {"app": "FinanceFlow API", "status": "online", "docs": "/docs"}
+@app.get("/health")
+def health(): return {"status": "healthy"}
